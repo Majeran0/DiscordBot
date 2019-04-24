@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -32,7 +31,7 @@ namespace DiscordBot.Services {
             if (!File.Exists(_logFile))
                 File.Create(_logFile).Dispose();
 
-            string logText = $"{DateTime.Now.ToString("hh:mm:ss")} [{msg.Severity}] {msg.Source}: {msg.Exception?.ToString() ?? msg.Message}";
+            string logText = $"{DateTime.Now.ToString("HH:mm:ss")} [{msg.Severity}] {msg.Source}: {msg.Exception?.ToString() ?? msg.Message}";
             File.AppendAllText(_logFile, logText + "\n");
 
             return Console.Out.WriteLineAsync(logText);
