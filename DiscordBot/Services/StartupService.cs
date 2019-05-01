@@ -1,38 +1,67 @@
-﻿using System;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Microsoft.Extensions.Configuration;
-using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
+using DiscordBot.Handlers;
+using System;
 using System.Threading.Tasks;
+using Victoria;
+using System.Threading;
 
 namespace DiscordBot.Services {
     public class StartupService {
-        private readonly IServiceProvider _provider;
-        private readonly DiscordSocketClient _discord;
-        private readonly CommandService _commands;
-        private readonly IConfigurationRoot _config;
+        private ServiceProvider _provider;
+        private DiscordSocketClient _discord;
+        private Lavalink _lavalink;
 
-        public StartupService(
-            IServiceProvider provider,
-            DiscordSocketClient discord,
-            CommandService commands,
-            IConfigurationRoot config) {
-            _provider = provider;
-            _config = config;
-            _commands = commands;
-            _discord = discord;
-        }
+        public async Task InitializeAsync() {
+            _provider = ConfigureServices();
+            _discord = _provider.GetRequiredService<DiscordSocketClient>();
+            _lavalink = _provider.GetRequiredService<Lavalink>();
+            var global = new Global().Initialize();
+            HookEvents();
 
-        public async Task StartAsync() {
-            string discordToken = _config.GetSection("token").Value;
-            if (string.IsNullOrWhiteSpace(discordToken))
-                throw new Exception("You must enter your discord token to _config.yml");
-
-            await _discord.LoginAsync(TokenType.Bot, discordToken);
+            await _discord.LoginAsync(TokenType.Bot, Global.Config.Token);
             await _discord.StartAsync();
 
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
+            await _provider.GetRequiredService<CommandHandler>().InitializeAsync();
+
+            await Task.Delay(Timeout.Infinite);
+        }
+
+        private void HookEvents() {
+            _lavalink.Log += LogAsync;
+            _discord.Log += LogAsync;
+            _provider.GetRequiredService<CommandService>().Log += LogAsync;
+            _discord.Ready += OnReadyAsync;
+        }
+
+        private async Task OnReadyAsync() {
+            try {
+                var node = await _lavalink.AddNodeAsync(_discord, new Configuration {
+                    Severity = LogSeverity.Info
+                });
+                node.TrackFinished += _provider.GetService<AudioService>().OnFinished;
+                await _discord.SetGameAsync(Global.Config.GameStatus);
+            } catch (Exception ex) {
+                await LoggingService.LogInformationAsync(ex.Source, ex.Message);
+            }
+        }
+
+        private async Task LogAsync(LogMessage logMessage) {
+            await LoggingService.LogAsync(logMessage.Source, logMessage.Severity, logMessage.Message);
+        }
+
+
+        private ServiceProvider ConfigureServices() {
+            return new ServiceCollection()
+                .AddSingleton<DiscordSocketClient>()
+                .AddSingleton<CommandService>()
+                .AddSingleton<CommandHandler>()
+                .AddSingleton<Lavalink>()
+                .AddSingleton<AudioService>()
+                .AddSingleton<BotService>()
+                .BuildServiceProvider();
         }
     }
 }

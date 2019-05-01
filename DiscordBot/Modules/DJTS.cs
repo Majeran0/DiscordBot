@@ -6,7 +6,7 @@ namespace DiscordBot.Modules {
     [Name("DJTS")]
     public class DJTS : ModuleBase<SocketCommandContext> {
         [Command("2137")]
-        [Summary("No 2137.")]
+        [Summary("Pokazuje ile zostało do śmierci papieża polaka.")]
         public async Task DJTSAsync() {
             var current = DateTime.Now;
             var dj = new DateTime(current.Year, current.Month, current.Day, 21, 37, 0);

@@ -8,33 +8,95 @@ using System.Threading.Tasks;
 
 namespace DiscordBot.Services {
     public class LoggingService {
-        private readonly DiscordSocketClient _discord;
-        private readonly CommandService _commands;
 
-        private string _logDirectory { get; }
-        private string _logFile => Path.Combine(_logDirectory, $"{DateTime.Now.ToString("yyyy-MM-dd")}.txt");
+        public static async Task LogCriticalAsync(string source, string message, Exception exc = null)
+             => await LogAsync(source, LogSeverity.Critical, message, exc);
 
-        public LoggingService(DiscordSocketClient discord,
-            CommandService commands) {
-            _logDirectory = Path.Combine(AppContext.BaseDirectory, "logs");
+        public static async Task LogInformationAsync(string source, string message)
+            => await LogAsync(source, LogSeverity.Info, message);
 
-            _discord = discord;
-            _commands = commands;
 
-            _discord.Log += OnLogAsync;
-            _commands.Log += OnLogAsync;
+
+        public static async Task LogAsync(string src, LogSeverity severity, string message, Exception exception = null) {
+            if (severity.Equals(null))
+                severity = LogSeverity.Warning;
+
+            await Append($"{GetSeverityString(severity)}", GetConsoleColor(severity));
+            await Append($" [{SourceToString(src)}] ", ConsoleColor.DarkGray);
+
+            if (!string.IsNullOrWhiteSpace(message))
+                await Append($"{message}\n", ConsoleColor.White);
+            else if (exception.Message == null)
+                await Append("Unknown Exeption. Exception returned Null.\n", ConsoleColor.DarkRed);
+            else
+                await Append($"{exception.Message ?? "Unknown"}\n{exception.StackTrace ?? "Unknown"}\n", GetConsoleColor(severity));
         }
 
-        private Task OnLogAsync(LogMessage msg) {
-            if (!Directory.Exists(_logDirectory))
-                Directory.CreateDirectory(_logDirectory);
-            if (!File.Exists(_logFile))
-                File.Create(_logFile).Dispose();
+        private static async Task Append(string message, ConsoleColor color) {
+            await Task.Run(() => {
+                Console.ForegroundColor = color;
+                Console.Write(message);
+            });
+        }
 
-            string logText = $"{DateTime.Now.ToString("HH:mm:ss")} [{msg.Severity}] {msg.Source}: {msg.Exception?.ToString() ?? msg.Message}";
-            File.AppendAllText(_logFile, logText + "\n");
+        private static string SourceToString(string src) {
+            switch (src.ToLower()) {
+                case "discord":
+                    return "DISCD";
+                case "victoria":
+                    return "VICTR";
+                case "audio":
+                    return "AUDIO";
+                case "admin":
+                    return "ADMIN";
+                case "gateway":
+                    return "GTWAY";
+                case "blacklist":
+                    return "BLAKL";
+                case "lavanode_0_socket":
+                    return "LAVAS";
+                case "lavanode_0":
+                    return "LAVA#";
+                case "bot":
+                    return "BOTWN";
+                default: return src;
+            }
+        }
 
-            return Console.Out.WriteLineAsync(logText);
+        private static string GetSeverityString(LogSeverity severity) {
+            switch (severity) {
+                case LogSeverity.Critical:
+                    return "CRIT";
+                case LogSeverity.Debug:
+                    return "DBUG";
+                case LogSeverity.Error:
+                    return "EROR";
+                case LogSeverity.Info:
+                    return "INFO";
+                case LogSeverity.Verbose:
+                    return "VERB";
+                case LogSeverity.Warning:
+                    return "WARN";
+                default: return "UNKN";
+            }
+        }
+
+        private static ConsoleColor GetConsoleColor(LogSeverity severity) {
+            switch (severity) {
+                case LogSeverity.Critical:
+                    return ConsoleColor.Red;
+                case LogSeverity.Debug:
+                    return ConsoleColor.Magenta;
+                case LogSeverity.Error:
+                    return ConsoleColor.DarkRed;
+                case LogSeverity.Info:
+                    return ConsoleColor.Green;
+                case LogSeverity.Verbose:
+                    return ConsoleColor.DarkCyan;
+                case LogSeverity.Warning:
+                    return ConsoleColor.Yellow;
+                default: return ConsoleColor.White;
+            }
         }
     }
 }
