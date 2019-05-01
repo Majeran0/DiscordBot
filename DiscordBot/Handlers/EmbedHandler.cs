@@ -1,7 +1,4 @@
 ﻿using Discord;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DiscordBot.Handlers {
@@ -19,7 +16,7 @@ namespace DiscordBot.Handlers {
 
         public static async Task<Embed> CreateErrorEmbed(string source, string error) {
             var embed = await Task.Run(()
-                =>new EmbedBuilder()
+                => new EmbedBuilder()
                 .WithTitle($"ERROR OCCURED FROM - {source}")
                 .WithDescription($"**ERROR DETAILS**: \n{error}")
                 .WithColor(Color.DarkRed)

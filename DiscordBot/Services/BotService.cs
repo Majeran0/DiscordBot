@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Discord;
 using Discord.Commands;
 using DiscordBot.Handlers;
 using System.Linq;
-using Victoria;
 using System.Threading.Tasks;
 
 namespace DiscordBot.Services {
