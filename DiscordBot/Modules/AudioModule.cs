@@ -9,38 +9,38 @@ namespace DiscordBot.Modules {
 
         [Command("Join")]
         public async Task JoinAndPlay()
-            => await ReplyAsync("", false, await AudioService.JoinOrPlayAsync((SocketGuildUser)Context.User, Context.Channel, Context.Guild.Id));
+            => await ReplyAsync("", false, await AudioService.JoinOrPlayAsync((SocketGuildUser)Context.User, Context.Channel, Context.Guild));
 
         [Command("Leave")]
         public async Task Leave()
-            => await ReplyAsync("", false, await AudioService.LeaveAsync(Context.Guild.Id));
+            => await ReplyAsync("", false, await AudioService.LeaveAsync(Context.Guild));
 
         [Command("Play")]
         public async Task Play([Remainder]string search)
-            => await ReplyAsync("", false, await AudioService.JoinOrPlayAsync((SocketGuildUser)Context.User, Context.Channel, Context.Guild.Id, search));
+            => await ReplyAsync("", false, await AudioService.JoinOrPlayAsync((SocketGuildUser)Context.User, Context.Channel, Context.Guild, search));
 
         [Command("Stop")]
         public async Task Stop()
-            => await ReplyAsync("", false, await AudioService.StopAsync(Context.Guild.Id));
+            => await ReplyAsync("", false, await AudioService.StopAsync(Context.Guild));
 
         [Command("List")]
         public async Task List()
-            => await ReplyAsync("", false, await AudioService.ListAsync(Context.Guild.Id));
+            => await ReplyAsync("", false, await AudioService.ListAsync(Context.Guild));
 
         [Command("Skip")]
         public async Task Delist(string id = null)
-            => await ReplyAsync("", false, await AudioService.SkipTrackAsync(Context.Guild.Id));
+            => await ReplyAsync("", false, await AudioService.SkipTrackAsync(Context.Guild));
 
         [Command("Volume")]
-        public async Task Volume(int volume)
-            => await ReplyAsync(await AudioService.VolumeAsync(Context.Guild.Id, volume));
+        public async Task Volume(ushort volume)
+            => await ReplyAsync(await AudioService.VolumeAsync(Context.Guild, volume));
 
         [Command("Pause")]
         public async Task Pause()
-            => await ReplyAsync(await AudioService.Pause(Context.Guild.Id));
+            => await ReplyAsync(await AudioService.Pause(Context.Guild));
 
         [Command("Resume")]
         public async Task Resume()
-=> await ReplyAsync(await AudioService.Pause(Context.Guild.Id));
+=> await ReplyAsync(await AudioService.Pause(Context.Guild));
     }
 }

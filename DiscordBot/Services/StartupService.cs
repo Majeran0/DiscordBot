@@ -12,12 +12,12 @@ namespace DiscordBot.Services {
     public class StartupService {
         private ServiceProvider _provider;
         private DiscordSocketClient _discord;
-        private Lavalink _lavalink;
+        private LavaNode _lavalink;
 
         public async Task InitializeAsync() {
             _provider = ConfigureServices();
             _discord = _provider.GetRequiredService<DiscordSocketClient>();
-            _lavalink = _provider.GetRequiredService<Lavalink>();
+            _lavalink = _provider.GetRequiredService<LavaNode>();
             var global = new Global().Initialize();
             HookEvents();
 
@@ -30,7 +30,7 @@ namespace DiscordBot.Services {
         }
 
         private void HookEvents() {
-            _lavalink.Log += LogAsync;
+            _lavalink.OnLog += LogAsync;
             _discord.Log += LogAsync;
             _provider.GetRequiredService<CommandService>().Log += LogAsync;
             _discord.Ready += OnReadyAsync;
@@ -38,10 +38,8 @@ namespace DiscordBot.Services {
 
         private async Task OnReadyAsync() {
             try {
-                var node = await _lavalink.AddNodeAsync(_discord, new Configuration {
-                    Severity = LogSeverity.Info
-                });
-                node.TrackFinished += _provider.GetService<AudioService>().OnFinished;
+                await _lavalink.ConnectAsync();
+                //node.TrackFinished += _provider.GetService<AudioService>().OnFinished;
                 await _discord.SetGameAsync(Global.Config.GameStatus);
             } catch (Exception ex) {
                 await LoggingService.LogInformationAsync(ex.Source, ex.Message);
@@ -58,7 +56,8 @@ namespace DiscordBot.Services {
                 .AddSingleton<DiscordSocketClient>()
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandler>()
-                .AddSingleton<Lavalink>()
+                .AddSingleton<LavaNode>()
+                .AddSingleton<LavaConfig>()
                 .AddSingleton<AudioService>()
                 .AddSingleton<BotService>()
                 .BuildServiceProvider();

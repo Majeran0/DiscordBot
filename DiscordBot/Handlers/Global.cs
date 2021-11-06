@@ -18,12 +18,12 @@ namespace DiscordBot.Handlers {
 
             if (!File.Exists(ConfigPath)) {
                 json = JsonConvert.SerializeObject(GenerateNewConfig(), Formatting.Indented);
-                File.WriteAllText("_config.json", json, new UTF8Encoding(false));
+                await File.WriteAllTextAsync("_config.json", json, new UTF8Encoding(false));
                 await LoggingService.LogAsync("Bot", LogSeverity.Error, "No config file, generated a new one");
                 await Task.Delay(Timeout.Infinite);
             }
 
-            json = File.ReadAllText(ConfigPath, new UTF8Encoding(false));
+            json = await File.ReadAllTextAsync(ConfigPath, new UTF8Encoding(false));
             Config = JsonConvert.DeserializeObject<Config>(json);
         }
 
