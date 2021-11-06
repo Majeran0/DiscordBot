@@ -8,15 +8,19 @@ using System.Threading.Tasks;
 using Discord;
 using System.Threading;
 
-namespace DiscordBot.Handlers {
-    public class Global {
-        public static string ConfigPath { get; set; } = "_config.json";
-        public static Config Config { get; set; }
+namespace DiscordBot.Handlers
+{
+    public class Global
+    {
+        private static string ConfigPath { get; set; } = "_config.json";
+        public static Config Config { get; private set; }
 
-        public async Task Initialize() {
-            var json = string.Empty;
+        public async Task InitializeAsync()
+        {
+            string json;
 
-            if (!File.Exists(ConfigPath)) {
+            if (!File.Exists(ConfigPath))
+            {
                 json = JsonConvert.SerializeObject(GenerateNewConfig(), Formatting.Indented);
                 await File.WriteAllTextAsync("_config.json", json, new UTF8Encoding(false));
                 await LoggingService.LogAsync("Bot", LogSeverity.Error, "No config file, generated a new one");
@@ -27,7 +31,8 @@ namespace DiscordBot.Handlers {
             Config = JsonConvert.DeserializeObject<Config>(json);
         }
 
-        private static Config GenerateNewConfig() => new Config {
+        private static Config GenerateNewConfig() => new Config
+        {
             Token = "",
             Prefix = "|",
             GameStatus = "Test",

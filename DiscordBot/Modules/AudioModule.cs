@@ -5,8 +5,13 @@ using System.Threading.Tasks;
 
 namespace DiscordBot.Modules {
     public class AudioModule : ModuleBase<SocketCommandContext> {
-        public AudioService AudioService { get; set; }
-
+        private AudioService AudioService { get; }
+        
+        public AudioModule(AudioService audioService)
+        {
+            AudioService = audioService;
+        }
+        
         [Command("Join")]
         public async Task JoinAndPlay()
             => await ReplyAsync("", false, await AudioService.JoinOrPlayAsync((SocketGuildUser)Context.User, Context.Channel, Context.Guild));

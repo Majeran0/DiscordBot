@@ -15,10 +15,10 @@ namespace DiscordBot.Services
 {
     public class AudioService
     {
-        private LavaNode _lavalink;
+        private readonly LavaNode _lavaNode;
 
-        public AudioService(LavaNode lavalink)
-            => _lavalink = lavalink;
+        public AudioService(LavaNode lavaNode)
+            => _lavaNode = lavaNode;
 
         private readonly Lazy<ConcurrentDictionary<ulong, AudioOptions>> _lazyOptions
             = new Lazy<ConcurrentDictionary<ulong, AudioOptions>>();
@@ -34,7 +34,7 @@ namespace DiscordBot.Services
 
             if (query == null)
             {
-                await _lavalink.JoinAsync(user.VoiceChannel, textChannel as ITextChannel);
+                await _lavaNode.JoinAsync(user.VoiceChannel, textChannel as ITextChannel);
                 Options.TryAdd(user.Guild.Id, new AudioOptions
                 {
                     Summoner = user
@@ -48,24 +48,24 @@ namespace DiscordBot.Services
             {
                 try
                 {
-                    if (!_lavalink.HasPlayer(guild))
+                    if (!_lavaNode.HasPlayer(guild))
                     {
                         //when you use play before join
-                        await _lavalink.JoinAsync(user.VoiceChannel, textChannel as ITextChannel);
+                        await _lavaNode.JoinAsync(user.VoiceChannel, textChannel as ITextChannel);
                         Options.TryAdd(user.Guild.Id, new AudioOptions
                         {
                             Summoner = user
                         });
                     }
-                    var player = _lavalink.GetPlayer(guild);
 
-                    LavaTrack track;
-                    var search = await _lavalink.SearchYouTubeAsync(query);
+                    var player = _lavaNode.GetPlayer(guild);
+
+                    var search = await _lavaNode.SearchYouTubeAsync(query);
 
                     if (search.Status == SearchStatus.NoMatches)
                         return await EmbedHandler.CreateErrorEmbed("Music", $"No matches for {query}.");
 
-                    track = search.Tracks.FirstOrDefault();
+                    var track = search.Tracks.FirstOrDefault();
 
                     if (player.Track != null &&
                         player.PlayerState == PlayerState.Playing ||
@@ -95,13 +95,13 @@ namespace DiscordBot.Services
         {
             try
             {
-                var player = _lavalink.GetPlayer(guild);
+                var player = _lavaNode.GetPlayer(guild);
                 if (player.PlayerState == PlayerState.Playing)
                     await player.StopAsync();
 
                 var channelName = player.VoiceChannel.Name;
-                _lavalink.LeaveAsync(player.VoiceChannel);
-                
+                await _lavaNode.LeaveAsync(player.VoiceChannel);
+
                 await LoggingService.LogInformationAsync("Music", $"Bot has left {channelName}.");
                 return await EmbedHandler.CreateBasicEmbed("Music", $"Bot has left {channelName}.", Color.Blue);
             }
@@ -116,14 +116,14 @@ namespace DiscordBot.Services
             try
             {
                 var descriptionBuilder = new StringBuilder();
-                var player = _lavalink.GetPlayer(guild);
+                var player = _lavaNode.GetPlayer(guild);
                 if (player == null)
-                    return await EmbedHandler.CreateErrorEmbed("Music, List", "Could not aquire player");
+                    return await EmbedHandler.CreateErrorEmbed("Music, List", "Could not acquire player");
 
                 if (player.PlayerState == PlayerState.Playing)
                 {
                     if (player.Queue.Count < 1 && player.Track != null)
-                        return await EmbedHandler.CreateBasicEmbed($"Now Platying {player.Track.Title}",
+                        return await EmbedHandler.CreateBasicEmbed($"Now Playing {player.Track.Title}",
                             "Nothing else is queued", Color.Blue);
                     else
                     {
@@ -154,7 +154,7 @@ namespace DiscordBot.Services
         {
             try
             {
-                var player = _lavalink.GetPlayer(guild);
+                var player = _lavaNode.GetPlayer(guild);
                 if (player == null)
                     return await EmbedHandler.CreateErrorEmbed("Music, List", $"Could not acquire player.");
                 if (player.Queue.Count < 1)
@@ -188,7 +188,7 @@ namespace DiscordBot.Services
         {
             try
             {
-                var player = _lavalink.GetPlayer(guild);
+                var player = _lavaNode.GetPlayer(guild);
                 if (player == null)
                     return await EmbedHandler.CreateErrorEmbed("Music, List", "Could not acquire player");
 
@@ -211,9 +211,9 @@ namespace DiscordBot.Services
                 return "Volume must be between 0 and 150";
             try
             {
-                if (!_lavalink.HasPlayer(guild))
+                if (!_lavaNode.HasPlayer(guild))
                     return "Bot must be connected to audio channel";
-                var player = _lavalink.GetPlayer(guild);
+                var player = _lavaNode.GetPlayer(guild);
                 await player.UpdateVolumeAsync(volume);
                 await LoggingService.LogInformationAsync("Music", $"Bot volume set to {volume}");
                 return $"Volume has been set to {volume}.";
@@ -228,7 +228,7 @@ namespace DiscordBot.Services
         {
             try
             {
-                var player = _lavalink.GetPlayer(guild);
+                var player = _lavaNode.GetPlayer(guild);
                 if (player.PlayerState == PlayerState.Paused)
                 {
                     await player.ResumeAsync();
@@ -248,7 +248,7 @@ namespace DiscordBot.Services
         {
             try
             {
-                var player = _lavalink.GetPlayer(guild);
+                var player = _lavaNode.GetPlayer(guild);
                 if (player.PlayerState != PlayerState.Paused)
                     await player.ResumeAsync();
                 return $"**Resumed:** {player.Track.Title}";
@@ -267,7 +267,7 @@ namespace DiscordBot.Services
 
             if (nextTrack is null)
             {
-                await LoggingService.LogInformationAsync("Music", "Bot has stoppped playback.");
+                await LoggingService.LogInformationAsync("Music", "Bot has stopped playback.");
                 await player.StopAsync();
             }
             else
