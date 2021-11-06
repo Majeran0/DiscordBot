@@ -3,18 +3,19 @@ using System;
 using System.Threading.Tasks;
 
 
-namespace DiscordBot.Services {
-    public class LoggingService {
-
+namespace DiscordBot.Services
+{
+    public class LoggingService
+    {
         public static async Task LogCriticalAsync(string source, string message, Exception exc = null)
-             => await LogAsync(source, LogSeverity.Critical, message, exc);
+            => await LogAsync(source, LogSeverity.Critical, message, exc);
 
         public static async Task LogInformationAsync(string source, string message)
             => await LogAsync(source, LogSeverity.Info, message);
 
 
-
-        public static async Task LogAsync(string src, LogSeverity severity, string message, Exception exception = null) {
+        public static async Task LogAsync(string src, LogSeverity severity, string message, Exception exception = null)
+        {
             if (severity.Equals(null))
                 severity = LogSeverity.Warning;
 
@@ -26,18 +27,23 @@ namespace DiscordBot.Services {
             else if (exception.Message == null)
                 await Append("Unknown Exeption. Exception returned Null.\n", ConsoleColor.DarkRed);
             else
-                await Append($"{exception.Message ?? "Unknown"}\n{exception.StackTrace ?? "Unknown"}\n", GetConsoleColor(severity));
+                await Append($"{exception.Message ?? "Unknown"}\n{exception.StackTrace ?? "Unknown"}\n",
+                    GetConsoleColor(severity));
         }
 
-        private static async Task Append(string message, ConsoleColor color) {
-            await Task.Run(() => {
+        private static async Task Append(string message, ConsoleColor color)
+        {
+            await Task.Run(() =>
+            {
                 Console.ForegroundColor = color;
                 Console.Write(message);
             });
         }
 
-        private static string SourceToString(string src) {
-            switch (src.ToLower()) {
+        private static string SourceToString(string src)
+        {
+            switch (src.ToLower())
+            {
                 case "discord":
                     return "DISCD";
                 case "victoria":
@@ -60,8 +66,10 @@ namespace DiscordBot.Services {
             }
         }
 
-        private static string GetSeverityString(LogSeverity severity) {
-            switch (severity) {
+        private static string GetSeverityString(LogSeverity severity)
+        {
+            switch (severity)
+            {
                 case LogSeverity.Critical:
                     return "CRIT";
                 case LogSeverity.Debug:
@@ -78,8 +86,10 @@ namespace DiscordBot.Services {
             }
         }
 
-        private static ConsoleColor GetConsoleColor(LogSeverity severity) {
-            switch (severity) {
+        private static ConsoleColor GetConsoleColor(LogSeverity severity)
+        {
+            switch (severity)
+            {
                 case LogSeverity.Critical:
                     return ConsoleColor.Red;
                 case LogSeverity.Debug:

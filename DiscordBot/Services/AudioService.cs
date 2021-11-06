@@ -57,6 +57,7 @@ namespace DiscordBot.Services
                             Summoner = user
                         });
                     }
+
                     var player = _lavalink.GetPlayer(guild);
 
                     LavaTrack track;
@@ -100,8 +101,8 @@ namespace DiscordBot.Services
                     await player.StopAsync();
 
                 var channelName = player.VoiceChannel.Name;
-                _lavalink.LeaveAsync(player.VoiceChannel);
-                
+                await _lavalink.LeaveAsync(player.VoiceChannel);
+
                 await LoggingService.LogInformationAsync("Music", $"Bot has left {channelName}.");
                 return await EmbedHandler.CreateBasicEmbed("Music", $"Bot has left {channelName}.", Color.Blue);
             }

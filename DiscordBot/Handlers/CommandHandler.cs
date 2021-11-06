@@ -7,13 +7,16 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace DiscordBot.Handlers {
-    public class CommandHandler {
+namespace DiscordBot.Handlers
+{
+    public class CommandHandler
+    {
         private readonly DiscordSocketClient _discord;
         private readonly CommandService _commands;
         private readonly IServiceProvider _services;
 
-        public CommandHandler(IServiceProvider services) {
+        public CommandHandler(IServiceProvider services)
+        {
             _commands = services.GetRequiredService<CommandService>();
             _discord = services.GetRequiredService<DiscordSocketClient>();
             _services = services;
@@ -21,21 +24,25 @@ namespace DiscordBot.Handlers {
             HookEvents();
         }
 
-        public async Task InitializeAsync() {
+        public async Task InitializeAsync()
+        {
             await _commands.AddModulesAsync(
                 assembly: Assembly.GetEntryAssembly(),
                 services: _services);
         }
 
-        public void HookEvents() {
+        public void HookEvents()
+        {
             _commands.CommandExecuted += CommandExecutedAsync;
             _commands.Log += LogAsync;
             _discord.MessageReceived += HandleCommandAsync;
         }
 
-        private Task HandleCommandAsync(SocketMessage socketMessage) {
+        private Task HandleCommandAsync(SocketMessage socketMessage)
+        {
             var argPos = 0;
-            if (!(socketMessage is SocketUserMessage message) || message.Author.IsBot || message.Author.IsWebhook || message.Channel is IPrivateChannel)
+            if (!(socketMessage is SocketUserMessage message) || message.Author.IsBot || message.Author.IsWebhook ||
+                message.Channel is IPrivateChannel)
                 return Task.CompletedTask;
 
             if (!message.HasStringPrefix(Global.Config.Prefix, ref argPos))
@@ -44,13 +51,14 @@ namespace DiscordBot.Handlers {
             var context = new SocketCommandContext(_discord, socketMessage as SocketUserMessage);
 
             var blacklistedCheck = from a in Global.Config.Blacklist
-                                   where a == context.Channel.Id
-                                   select a;
+                where a == context.Channel.Id
+                select a;
             var blacklistedChannel = blacklistedCheck.FirstOrDefault();
 
             if (blacklistedChannel == context.Channel.Id)
                 return Task.CompletedTask;
-            else {
+            else
+            {
                 var result = _commands.ExecuteAsync(context, argPos, _services, MultiMatchHandling.Best);
 
                 if (!result.Result.IsSuccess)
@@ -60,7 +68,8 @@ namespace DiscordBot.Handlers {
             }
         }
 
-        public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result) {
+        public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
+        {
             if (!command.IsSpecified)
                 return;
 
@@ -70,7 +79,8 @@ namespace DiscordBot.Handlers {
             await context.Channel.SendMessageAsync($"Error: {result.ToString()}");
         }
 
-        private Task LogAsync(LogMessage log) {
+        private Task LogAsync(LogMessage log)
+        {
             Console.WriteLine(log.ToString());
 
             return Task.CompletedTask;
